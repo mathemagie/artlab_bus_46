@@ -1,0 +1,82 @@
+#include <FastSPI_LED.h>
+#include <Wire.h>
+
+#define NUM_LEDS 50
+
+// Sometimes chipsets wire in a backwards sort of way
+struct CRGB {
+  unsigned char b;
+  unsigned char r;
+  unsigned char g;
+};
+// struct CRGB { unsigned char r; unsigned char g; unsigned char b; };
+struct CRGB *leds;
+
+#define PIN 4
+
+int x;
+
+void setup()
+{
+  Wire.begin(3);
+  Wire.onReceive(receiveEvent); // register event
+  Serial.begin(9600);
+  FastSPI_LED.setLeds(NUM_LEDS);
+  //FastSPI_LED.setChipset(CFastSPI_LED::SPI_SM16716);
+  FastSPI_LED.setChipset(CFastSPI_LED::SPI_TM1809);
+  //FastSPI_LED.setChipset(CFastSPI_LED::SPI_LPD6803);
+  //FastSPI_LED.setChipset(CFastSPI_LED::SPI_HL1606);
+  //FastSPI_LED.setChipset(CFastSPI_LED::SPI_595);
+  //FastSPI_LED.setChipset(CFastSPI_LED::SPI_WS2801);
+
+  FastSPI_LED.setPin(PIN);
+
+  FastSPI_LED.init();
+  FastSPI_LED.start();
+
+  leds = (struct CRGB*)FastSPI_LED.getRGBData();
+}
+
+void loop() {
+  // one at a time
+  for(int j = 0; j < 3; j++) {
+    for(int i = 0 ; i < NUM_LEDS; i++ ) {
+      memset(leds, 0, NUM_LEDS * 3);
+      switch(j) {
+      case 0:
+        leds[i].r = 255;
+        break;
+      case 1:
+        leds[i].g = 255;
+        break;
+      case 2:
+        leds[i].b = 255;
+        break;
+      }
+        //FastSPI_LED.show();
+      delay(10);
+    }
+  }
+
+
+
+}
+
+void receiveEvent(int Size) {
+    while(1 < Wire.available()) // loop through all but the last
+    {
+      char c = Wire.read(); // receive byte as a character
+      //Serial.print(c);         // print the character
+    }
+    x = Wire.read();    // receive byte as an integer
+     memset(leds, 0, NUM_LEDS * 3);
+      leds[x].b = 255;
+         FastSPI_LED.show();
+        delay(2000);
+        leds[x].b = 0;
+          FastSPI_LED.show();
+
+
+    Serial.println(x);
+
+}
